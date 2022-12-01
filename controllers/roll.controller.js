@@ -89,7 +89,7 @@ exports.getItems = async (req, res) => {
         } else {
             continue;
         }
-    } while (counter < 4);
+    } while (pageInfo.hasNextPage);
 
     const jsonData = JSON.stringify(data);
     const fs = require('fs');
