@@ -1,5 +1,7 @@
 const axios = require('axios');
 const { ROLL_URL, ROLL_BASE_URL, sleep } = require('../utils/utils.js');
+const db = require('../model');
+const Item = db.roll;
 
 let pageInfo = {
     hasNextPage: false,
@@ -53,7 +55,7 @@ exports.getItems = async (req, res) => {
 
         var url = ROLL_BASE_URL.replace('{variables}', JSON.stringify(variables));
 
-        console.log(`Request ${counter} to ${url}\n`);
+        console.log(`\nRequest ${counter} to ${url}`);
 
         const response = await axios.get(url, {
             headers: {
@@ -91,16 +93,15 @@ exports.getItems = async (req, res) => {
         }
     } while (pageInfo.hasNextPage);
 
-    const jsonData = JSON.stringify(data);
-    const fs = require('fs');
+    Item.deleteMany({})
+        .catch(err => {
+            console.log(`Some error occurred while removing the previous items.${err.message}`);
+        });
 
-    // write JSON string to a file
-    fs.writeFile('items.json', jsonData, err => {
-        if (err) {
-            throw err
-        }
-        console.log('JSON data is saved.')
-    })
+    Item.insertMany(data.items)
+        .catch(err => {
+            console.log(`Some error occurred while inserting the new list of items.${err.message}`);
+        });
 }
 
 function handleSuccessResponse(response) {
