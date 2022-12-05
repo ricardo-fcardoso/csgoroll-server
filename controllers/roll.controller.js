@@ -2,6 +2,7 @@ const axios = require('axios');
 const { ROLL_URL, ROLL_BASE_URL, sleep } = require('../utils/utils.js');
 const db = require('../model');
 const Item = db.roll;
+const BuffItem = db.item;
 
 let pageInfo = {
     hasNextPage: false,
@@ -14,9 +15,9 @@ exports.getItems = async (req, res) => {
 
     var data = { items: [] }
 
-    console.log(`Initializing CSGOROLL items update. This operation may take a few minutes.`);
+    console.log(`\nInitializing CSGOROLL items update. This operation may take a few minutes.`);
 
-    console.log(`Request ${counter} to ${ROLL_URL}\n`);
+    console.log(`\nRequest ${counter} to ${ROLL_URL}`);
 
     const response = await axios.get(ROLL_URL, {
         headers: {
@@ -73,13 +74,11 @@ exports.getItems = async (req, res) => {
                 data.items.push(elements);
             }
         } else {
-            res.status(400).send({
-                result: 'An error occurred',
-                error: response.data
-            })
+            console.log(response);
             return;
         }
 
+        /*
         if (counter % 5 == 0) {
             await sleep(30000);
         } else if (counter % 20 == 0) {
@@ -91,7 +90,11 @@ exports.getItems = async (req, res) => {
         } else {
             continue;
         }
+        */
+
     } while (pageInfo.hasNextPage);
+
+    console.log('\nRequests finished, adding items to database.\n');
 
     Item.deleteMany({})
         .catch(err => {
@@ -102,6 +105,39 @@ exports.getItems = async (req, res) => {
         .catch(err => {
             console.log(`Some error occurred while inserting the new list of items.${err.message}`);
         });
+
+    findUnderpricedItems(data);
+}
+
+async function findUnderpricedItems(data) {
+    const docs = await BuffItem.find({});
+
+    for (const rollItem of data.items) {
+        for (const tradeItem of rollItem.node.tradeItems) {
+            for (const buffItem of docs) {
+                if (tradeItem.marketName === buffItem.market_hash_name) {
+                    let rollName = tradeItem.marketName
+                    let rollTotalValue = tradeItem.value
+                    let rollBaseValue = tradeItem.itemVariant.value
+                    let rollMarkup = tradeItem.markupPercent
+                    let buffName = buffItem.market_hash_name
+                    let buffPrice = buffItem.sell_min_price
+
+                    let buffPriceInCoins = (buffPrice * 0.1423949) / 0.66
+
+                    let priceDiff = (buffPriceInCoins / rollTotalValue)
+
+                    if (priceDiff > 1) {
+                        let underpricedPerc = (priceDiff - 1) * 100
+                        console.log(`- ${rollName} -> ROLL: ${rollTotalValue} (${rollBaseValue} +${rollMarkup}%) BUFF: ${buffPriceInCoins.toFixed(2)} (UNDERPRICED ${underpricedPerc.toFixed(2)}%)`);
+                    } else {
+                        let overpricedPerc = (1 - priceDiff) * 100
+                        console.log(`- ${rollName} -> ROLL: ${rollTotalValue} (${rollBaseValue} +${rollMarkup}%) BUFF: ${buffPriceInCoins.toFixed(2)} (OVERPRICED ${overpricedPerc.toFixed(2)}%)`);
+                    }
+                }
+            }
+        }
+    }
 }
 
 function handleSuccessResponse(response) {

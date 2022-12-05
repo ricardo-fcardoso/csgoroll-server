@@ -7,5 +7,6 @@ const db = {};
 db.mongoose = mongoose;
 db.url = dbConfig.url;
 db.roll = require('./roll.model.js')(mongoose);
+db.item = require('./item.model.js')(mongoose);
 
 module.exports = db;
