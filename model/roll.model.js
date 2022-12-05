@@ -5,6 +5,12 @@ module.exports = mongoose => {
         __typename: String
     })
 
+    const AvailableAsset = mongoose.Schema({
+        steamAssetId: String,
+        availableAt: String,
+        __typename: String
+    })
+
     const ItemVariant = mongoose.Schema({
         id: String,
         itemId: String,
@@ -26,7 +32,7 @@ module.exports = mongoose => {
         color: String,
         size: Number,
         rarity: String,
-        availableAssets: [String],
+        availableAssets: [AvailableAsset],
         purchasable: String,
         totalRequested: Number,
         totalAvailable: Number,

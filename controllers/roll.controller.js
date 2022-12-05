@@ -78,7 +78,6 @@ exports.getItems = async (req, res) => {
             return;
         }
 
-        /*
         if (counter % 5 == 0) {
             await sleep(30000);
         } else if (counter % 20 == 0) {
@@ -90,7 +89,6 @@ exports.getItems = async (req, res) => {
         } else {
             continue;
         }
-        */
 
     } while (pageInfo.hasNextPage);
 
