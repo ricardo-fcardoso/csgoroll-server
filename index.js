@@ -24,9 +24,8 @@ db.mongoose
         process.exit();
     });
 
-// simple route
 app.get('/', function (req, res) {
-    res.json({ message: 'Welcome to the CSGORoll Server' });
+    res.redirect('/api/roll');
 });
 
 require('./routes/roll.routes')(app);
