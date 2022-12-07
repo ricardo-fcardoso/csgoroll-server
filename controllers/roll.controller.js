@@ -25,6 +25,9 @@ exports.getUnderpricedItems = async (req, res) => {
 }
 
 exports.forceUpdate = async (req, res) => {
+    res.status(200).send({
+        result: 'First request made with success. Server update will start soon.',
+    })
     updateItems();
 }
 
