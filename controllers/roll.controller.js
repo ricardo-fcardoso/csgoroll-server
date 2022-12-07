@@ -45,7 +45,7 @@ async function updateItems() {
     });
 
     if (response.status == 200) {
-        handleSuccessResponse(response, res);
+        handleSuccessResponse(response);
         counter++;
 
         var iterator = response.data.data.trades.edges.values();
