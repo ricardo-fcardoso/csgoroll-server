@@ -24,6 +24,10 @@ exports.getUnderpricedItems = async (req, res) => {
     res.json(underpricedJson);
 }
 
+exports.forceUpdate = async (req, res) => {
+    updateItems();
+}
+
 cron.schedule("*/15 * * * *", () => {
     updateItems();
 })
@@ -52,15 +56,6 @@ async function updateItems() {
         for (let elements of iterator) {
             data.items.push(elements);
         }
-
-        res.status(200).send({
-            result: 'First request made with success. Server update will start soon.',
-        })
-    } else {
-        res.status(400).send({
-            result: 'An error occurred',
-            error: response.data
-        })
     }
 
     do {
