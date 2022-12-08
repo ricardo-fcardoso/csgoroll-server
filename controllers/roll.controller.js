@@ -112,12 +112,12 @@ async function updateItems() {
 
     console.log(`\nRequests finished, adding ${data.items.length} items to database.\n`);
 
-    Item.deleteMany({})
+    await Item.deleteMany({})
         .catch(err => {
             console.log(`Some error occurred while removing the previous items.${err.message}`);
         });
 
-    Item.insertMany(data.items)
+    await Item.insertMany(data.items)
         .catch(err => {
             console.log(`Some error occurred while inserting the new list of items.${err.message}`);
         });
@@ -160,12 +160,12 @@ async function findUnderpricedItems() {
 
     console.log(`Adding ${underpricedItems.length} items from update analysis.`);
 
-    UnderpricedItems.deleteMany({})
+    await UnderpricedItems.deleteMany({})
         .catch(err => {
             console.log(`Some error occurred while removing the previous items.${err.message}`);
         });
 
-    UnderpricedItems.insertMany(underpricedItems)
+    await UnderpricedItems.insertMany(underpricedItems)
         .catch(err => {
             console.log(`Some error occurred while inserting the new list of items.${err.message}`);
         });
