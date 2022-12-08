@@ -139,7 +139,7 @@ async function findUnderpricedItems() {
     for (const rollItem of data) {
         for (const tradeItem of rollItem.node.tradeItems) {
             for (const buffItem of docs) {
-                if (tradeItem.marketName === buffItem.market_hash_name) {
+                if (tradeItem.itemVariant.externalId === buffItem.market_hash_name || tradeItem.marketName === buffItem.market_hash_name) {
                     let id = tradeItem.id + buffItem._id
                     let rollName = tradeItem.marketName
                     let imageUrl = buffItem.goods_info.icon_url
