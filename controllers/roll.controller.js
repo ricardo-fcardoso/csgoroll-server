@@ -1,12 +1,13 @@
 const axios = require('axios');
+const cron = require('node-cron');
+
 const { ROLL_URL, ROLL_BASE_URL, sleep } = require('../utils/utils.js');
+const UnderpricedItem = require('../model/underpriced.model');
+
 const db = require('../model');
 const Item = db.roll;
 const BuffItem = db.item;
-const UnderpricedItem = require('../model/underpriced.model');
-const fs = require('fs');
-const underpricedJson = require('../underpriced.json');
-const cron = require('node-cron');
+const UnderpricedItems = db.underpriced;
 
 let pageInfo = {
     hasNextPage: false,
@@ -21,7 +22,8 @@ cron.schedule("0 9 * * *", () => {
 });
 
 exports.getUnderpricedItems = async (req, res) => {
-    res.json(underpricedJson);
+    const items = await UnderpricedItems.find({});
+    res.status(200).send(items);
 }
 
 exports.forceUpdate = async (req, res) => {
@@ -31,7 +33,7 @@ exports.forceUpdate = async (req, res) => {
     updateItems();
 }
 
-cron.schedule("*/15 * * * *", () => {
+cron.schedule("*/20 * * * *", () => {
     updateItems();
 })
 
@@ -108,7 +110,7 @@ async function updateItems() {
 
     } while (pageInfo.hasNextPage);
 
-    console.log('\nRequests finished, adding items to database.\n');
+    console.log(`\nRequests finished, adding ${data.items.length} items to database.\n`);
 
     Item.deleteMany({})
         .catch(err => {
@@ -121,6 +123,8 @@ async function updateItems() {
         });
 
     await findUnderpricedItems();
+
+    console.log('Update finished');
 }
 
 async function findUnderpricedItems() {
@@ -154,11 +158,15 @@ async function findUnderpricedItems() {
         }
     }
 
-    var json = JSON.stringify(underpricedItems);
-    fs.writeFile('underpriced.json', json, 'utf8', function (err) {
-        if (err) throw err;
-        console.log("File has been created");
-    });
+    UnderpricedItems.deleteMany({})
+        .catch(err => {
+            console.log(`Some error occurred while removing the previous items.${err.message}`);
+        });
+
+    UnderpricedItems.insertMany(underpricedItems)
+        .catch(err => {
+            console.log(`Some error occurred while inserting the new list of items.${err.message}`);
+        });
 }
 
 function handleSuccessResponse(response) {
