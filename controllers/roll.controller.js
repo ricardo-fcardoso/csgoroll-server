@@ -5,7 +5,7 @@ const { ROLL_URL, ROLL_BASE_URL, sleep } = require('../utils/utils.js');
 const UnderpricedItem = require('../model/underpriced.model');
 
 const db = require('../model');
-const Item = db.roll;
+//const Item = db.roll;
 const BuffItem = db.item;
 const UnderpricedItems = db.underpriced;
 
@@ -112,6 +112,7 @@ async function updateItems() {
 
     console.log(`\nRequests finished, adding ${data.items.length} items to database.\n`);
 
+    /*
     Item.deleteMany({})
         .catch(err => {
             console.log(`Some error occurred while removing the previous items.${err.message}`);
@@ -121,21 +122,42 @@ async function updateItems() {
         .catch(err => {
             console.log(`Some error occurred while inserting the new list of items.${err.message}`);
         });
+    */
 
-    await findUnderpricedItems();
+    await findUnderpricedItems(data.items);
 
     console.log('Update finished');
 }
 
-async function findUnderpricedItems() {
+async function findUnderpricedItems(rollItems) {
     const docs = await BuffItem.find({});
     console.log('Buff items fetched with success');
-    const data = await Item.find({});
-    console.log('Roll items fetched with success');
+
     const underpricedItems = []
 
     console.log('Starting underpriced items analysis');
 
+    for (const roll of rollItems) {
+        for (const buff of docs) {
+            if (roll.node.tradeItems[0].marketName === buff.market_hash_name) {
+                let id = roll.node.tradeItems[0].id + buff._id
+                let rollName = roll.node.tradeItems[0].marketName
+                let imageUrl = buff.goods_info.icon_url
+                let rollTotalValue = roll.node.tradeItems[0].value
+                let rollBaseValue = roll.node.tradeItems[0].itemVariant.value
+                let rollMarkup = roll.node.tradeItems[0].markupPercent
+                let buffPrice = buff.sell_min_price
+
+                let buffPriceInCoins = (buffPrice * CNY_USD_RATE) / 0.66
+
+                let priceDiff = (buffPriceInCoins / rollTotalValue)
+
+                underpricedItems.push(new UnderpricedItem(id, rollName, imageUrl, rollTotalValue, rollBaseValue, rollMarkup, buffPriceInCoins, priceDiff > 1, priceDiff));
+            }
+        }
+    }
+
+    /*
     for (const rollItem of data) {
         for (const tradeItem of rollItem.node.tradeItems) {
             for (const buffItem of docs) {
@@ -157,6 +179,7 @@ async function findUnderpricedItems() {
             }
         }
     }
+    */
 
     UnderpricedItems.deleteMany({})
         .catch(err => {
